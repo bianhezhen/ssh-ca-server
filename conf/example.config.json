@@ -1,0 +1,18 @@
+{
+"ldap_server": "ldap.acme.com",
+"ldap_domain": "acme.com",
+"bind_user": "bind-user",
+"bind_password": "bind-password",
+"base_dn": "DC=acme,DC=com",
+"group_dn": "DC=acme,DC=com",
+"role_attribute": "extensionAttribute1",
+"role_description": "description",
+"ca_attribute": "extensionAttribute2",
+"principal_attribute": "extensionAttribute3",
+"ca_path": "/etc/ca-server/cas",
+"cas":[
+	{"name": "production", "max_duration": "24h"},
+	{"name": "nonproduction", "max_duration": "30d"},
+	{"name": "test", "max_duration": "1h"}
+]
+}
