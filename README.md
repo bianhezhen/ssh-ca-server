@@ -146,6 +146,8 @@ While CA signing is a great feature there is an obvious need to protect the CA. 
 
 ## Server Configuration
 
+By default configuration is loaded from /etc/ca-server/config.json.  To change this behavior set environment variable SSHCA_CONFIG_PATH to the full path of the configuration file.
+
 Parameter           | Default               |Description
 --------------------|-----------------------|------------------
 ldap_server         | -                     |FQDN of LDAP server

@@ -6,6 +6,8 @@ python:
 - '3.4'
 - '3.5'
 install: python setup.py install
+env:
+- SSHCA_CONFIG_PATH=./conf/example.config.json
 script: nosetests
 deploy:
   provider: pypi

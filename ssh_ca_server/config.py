@@ -22,12 +22,12 @@
 """
 
 import json
-import os.path
+import os
 
 
 class Config(object):
 
-    config_path = "/etc/ca-server/config.json"
+    config_path = os.getenv('SSHCA_CONFIG_PATH', "/etc/ca-server/config.json")
 
     role_attribute = "extensionAttribute1"
     role_description = "description"
