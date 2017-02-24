@@ -4,25 +4,12 @@ from setuptools import setup, find_packages
 # To use a consistent encoding
 from codecs import open
 from os import path, environ
+import subprocess
 
-#
-# Setup version information from environment variables. They are set in
-# the build environment.
-#
-MAJOR_VERSION = 0
-MINOR_VERSION = 0
-BUILD_NUMBER = 0
-
-if 'MAJOR_VERSION' in environ:
-    MAJOR_VERSION = environ['MAJOR_VERSION']
-
-if 'MINOR_VERSION' in environ:
-    MINOR_VERSION = environ['MINOR_VERSION']
-
-if 'BUILD_NUMBER' in environ:
-    BUILD_NUMBER = environ['BUILD_NUMBER']
-
-VERSION = '{0}.{1}.{2}'.format(MAJOR_VERSION, MINOR_VERSION, BUILD_NUMBER)
+try:
+    version = subprocess.check_output(['git', 'describe', '--tags']).decode('utf-8').rstrip()
+except:
+    version = '0.0.0'
 
 here = path.abspath(path.dirname(__file__))
 
@@ -32,7 +19,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='ssh-ca-server',
-    version=VERSION,
+    version=version,
 
     description='SSH CA Server',
     long_description=long_description,
