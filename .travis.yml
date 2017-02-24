@@ -1,0 +1,17 @@
+language: python
+python:
+- '2.7'
+- '3.2'
+- '3.3'
+- '3.4'
+- '3.5'
+install: python setup.py install
+script: nosetests
+deploy:
+  provider: pypi
+  user: commercehub
+  password:
+    secure: uyKTXKxXbGMmLajFV3XztxZho7Jd9ekM0sVVBf18UpyQah+pDUhSQYw51eRqvJCWkphbcIR0HF2cjiBjCH9JpFLRLnNztE9XkvAJKiqV2BPOfleyQtLWduaFKU/0rQwcuL4Zr/okmDeuNNfJg459rHpv4n3cnXKo2CW7XUWvqc2P0fHKNFyySASTkZmEdOUk4/RxG7jJ7ITTCJyH2AzuvIgTkceaYOESSvFKvd83ITMXARc7rRbAi0Q64XRfK6jgI7QPzFD2rhi0RyTuBtQkFDMky8c1FjlwIlTJGrP2DbYkwl8pe86BdaOhpcE+7qEIrMc26xXJ6y7F7aTgVs2UimBslkOlOSgA3k0icDsSBSrceU2FFIToFYJ94JWk9q3LlSZJlOZLG9XycoAQmlcO1CWmgmqKkkOJtPzW3I8fzKRQicZHcDmZf75mzPFdYvKdQtwe16A+nnepLNGb/BQFwPbkgFWiNgDCYluewAEXnUAiehFhGiK7O7ATl4LXGrsldPc89TZn252bVSZutedr08un3h31C7T4R6kw34RKBi0EUxoFzV9d4QPPZzWXUKOdEWf21RL2MpOQCYsdbkvxJl20Bi1P5te+ASzovdrFlPcv38wBQbFpLwpRcQlq181XrBGnJPbCPFdCafOT8m1vDfDLsGNrxlgV55tFiO8eido=
+  distributions: sdist bdist_wheel
+  on:
+    tags: true
