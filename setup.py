@@ -39,7 +39,7 @@ setup(
         'Programming Language :: Python :: 3.5',
     ],
     install_requires=[
-        'python-ldap>=2.4.25',
+        'ldap3>=2.2.1',
         'flask>=0.11.1'
     ]
 )

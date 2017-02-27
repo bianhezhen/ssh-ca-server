@@ -7,7 +7,7 @@ python:
 - '3.5'
 install: python setup.py install
 env:
-- SSHCA_CONFIG_PATH=./conf/example.config.json
+- SSHCA_CONFIG_PATH=/home/travis/build/commercehub-oss/ssh-ca-server/conf/travis.config.json
 script: nosetests
 deploy:
   provider: pypi

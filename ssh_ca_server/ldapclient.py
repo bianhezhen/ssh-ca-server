@@ -22,7 +22,7 @@
 """
 
 import logging
-import ldap
+import ldap3
 import json
 from .config import Config
 
@@ -49,16 +49,16 @@ class LdapClient(object):
     def ldap_bind(self):
         """ Establish ldap connection """
 
-        try:
-            conn = ldap.initialize('ldaps://{}'.format(self.ldap_server))
-            conn.protocol_version = 3
-            conn.set_option(ldap.OPT_REFERRALS, 0)
-            upn = "{}@{}".format(self.bind_user, self.ldap_domain)
-            conn.simple_bind_s(upn, self.bind_password)
-            self.logger.debug("ldap_bind: Successful bind with bind_user={}".format(upn))
+        bind_upn = "{}@{}".format(self.bind_user, self.ldap_domain)
 
-        except ldap.LDAPError as error:
-            self.logger.error("ldap_bind: Bind error occurred: {}".format(error))
+        server = ldap3.Server(host=self.ldap_server, port=636, use_ssl=True, get_info='ALL')
+
+        conn = ldap3.Connection(server, user=bind_upn, password=self.bind_password, auto_bind='NONE', version=3,
+                                authentication='SIMPLE', client_strategy='SYNC', auto_referrals=False,
+                                check_names=True, read_only=True, lazy=False, raise_exceptions=False)
+
+        if not conn.bind():
+            self.logger.error("ldap_bind: Bind error occurred: {}".format(conn.result))
             return False
 
         return conn
@@ -66,26 +66,24 @@ class LdapClient(object):
     def check_auth(self, username, password):
         """ Bind with user credentials to verify username and password """
 
-        upn = "{}@{}".format(username, self.ldap_domain)
+        print("PASS= {}".format(password))
 
-        try:
-            conn = ldap.initialize("ldaps://{}".format(self.ldap_server))
-            conn.protocol_version = 3
-            conn.set_option(ldap.OPT_REFERRALS, 0)
-            conn.simple_bind_s(upn, password)
+        if password is not "":
 
-            user_filter = "(&(objectClass=person)(sAMAccountName={}))".format(username)
-            self.logger.debug("check_auth: ldap filter {}".format(user_filter))
-            conn.search_ext_s(self.base_dn, ldap.SCOPE_SUBTREE, user_filter)
+            upn = "{}@{}".format(username, self.ldap_domain)
 
-            conn.unbind_s()
+            server = ldap3.Server(host=self.ldap_server, port=636, use_ssl=True, get_info='ALL')
 
-        except ldap.LDAPError as error:
-            self.logger.debug("check_auth: Failed bind with user={} {}".format(upn, error))
-            return False
+            conn = ldap3.Connection(server, user=upn, password=password, auto_bind='NONE', version=3,
+                                    authentication='SIMPLE', client_strategy='SYNC', auto_referrals=False,
+                                    check_names=True, read_only=True, lazy=False, raise_exceptions=False)
 
-        self.logger.debug("check_auth: Successful bind for {}".format(upn))
-        return True
+            if conn.bind():
+                return True
+            else:
+                return False
+
+        return False
 
     def is_member(self, user_name, group_name):
         """ Determine if user_name is a member of ldap group """
@@ -94,29 +92,42 @@ class LdapClient(object):
 
         # Using sAMAccountName get users full DN
         user_filter = "(&(objectClass=person)(sAMAccountName={}))".format(user_name)
-        results = self.ldap_connection.search_ext_s(self.base_dn, ldap.SCOPE_SUBTREE, user_filter)
-        user_dn = results[0][0]
 
-        if user_dn is None:
+        self.ldap_connection.search(search_base=self.base_dn,
+                                    search_filter=user_filter,
+                                    search_scope=ldap3.SUBTREE,
+                                    attributes=["distinguishedName",
+                                                "userPrincipalName"]
+                                    )
+
+        if "attributes" not in self.ldap_connection.response[0]:
             self.logger.error("is_member: User {} does not exist".format(user_name))
 
         else:
+
+            user_dn = self.ldap_connection.response[0]["attributes"]["distinguishedName"]
+
             self.logger.debug("is_member: Set user_dn={}".format(user_dn))
 
             # Using sAMAccountName get groups full DN
             self.logger.debug("is_member: Searching for group {}".format(group_name))
             group_filter = "(&(objectClass=group)(sAMAccountName={}))".format(group_name)
 
-            results = self.ldap_connection.search_ext_s(self.base_dn, ldap.SCOPE_SUBTREE, group_filter)
-            if results[0][0] is None:
+            self.ldap_connection.search(search_base=self.base_dn,
+                                        search_filter=group_filter,
+                                        search_scope=ldap3.SUBTREE,
+                                        attributes=["member"]
+                                        )
+
+            if len(self.ldap_connection.response) == 0:
                 self.logger.debug("is_member: Group {} does not exist".format(group_name))
 
-            elif "member" not in results[0][1]:
+            elif "member" not in self.ldap_connection.response[0]["attributes"]:
                 self.logger.debug("is_member: Group {} does not have any members".format(group_name))
 
             else:
                 # Looking through groups member field check for users full DN
-                group_members = results[0][1]["member"]
+                group_members = self.ldap_connection.response[0]["attributes"]["member"]
                 for member in group_members:
                     if member == user_dn:
                         self.logger.debug("is_member: Validated user {} is a member of {}".format(user_dn, group_name))
@@ -132,30 +143,39 @@ class LdapClient(object):
 
         # Find all groups with 'ca-role' in the role_attribute
         user_filter = "(&(objectClass=group)({}=ca-role))".format(self.role_attribute)
-        results = self.ldap_connection.search_ext_s(self.group_dn, ldap.SCOPE_SUBTREE, user_filter)
+
+        self.ldap_connection.search(search_base=self.group_dn,
+                                    search_filter=user_filter,
+                                    search_scope=ldap3.SUBTREE,
+                                    attributes=['name',
+                                                self.role_description,
+                                                self.ca_attribute,
+                                                self.principal_attribute
+                                                ]
+                                    )
 
         roles_list = []
 
-        for group in results:
-            if group[0] is not None:
+        for group in self.ldap_connection.response:
+            if group["attributes"]["name"] is not None:
                 role_dict = {}
 
                 # Allow for a blank description
                 try:
-                    role_dict["description"] = group[1][self.role_description][0]
-                except KeyError:
+                    role_dict["description"] = group["attributes"][self.role_description][0]
+                except IndexError:
                     role_dict["description"] = ""
 
                 try:
-                    role_dict["name"] = group[1]["name"][0]
-                    role_dict["ldap_group"] = group[1]['name'][0]
-                    role_dict["allowed_cas"] = group[1][self.ca_attribute][0]
-                    role_dict["allowed_principals"] = group[1][self.principal_attribute][0]
+                    role_dict["name"] = group["attributes"]["name"]
+                    role_dict["ldap_group"] = group["attributes"]["name"]
+                    role_dict["allowed_cas"] = group["attributes"][self.ca_attribute]
+                    role_dict["allowed_principals"] = group["attributes"][self.principal_attribute]
                     roles_list.append(role_dict)
                     self.logger.debug("get_roles: Found role {}".format(json.dumps(role_dict)))
 
                 except KeyError:
-                    self.logger.debug("get_roles: Verify group {} has all required attributes".format(group[0]))
+                    self.logger.debug("get_roles: Verify group {} has all required attributes".format(group["name"]))
 
         return roles_list
 

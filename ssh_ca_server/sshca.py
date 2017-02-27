@@ -23,6 +23,7 @@
 
 import subprocess
 import os
+import stat
 import logging
 import random
 from .config import Config
@@ -106,10 +107,10 @@ class CA(object):
         if os.path.isfile(temp_ca_key_file) and os.path.isfile(temp_ca_cert_file):
 
             os.rename(temp_ca_cert_file, ca_cert_file)
-            os.chmod(ca_cert_file, 0400)
+            os.chmod(ca_cert_file, stat.S_IRUSR)
 
             os.rename(temp_ca_key_file, ca_key_file)
-            os.chmod(ca_key_file, 0400)
+            os.chmod(ca_key_file, stat.S_IRUSR)
 
     def sign_cert(self, user, principals, filename):
         """ Sign an ssh public key file """
