@@ -66,8 +66,6 @@ class LdapClient(object):
     def check_auth(self, username, password):
         """ Bind with user credentials to verify username and password """
 
-        print("PASS= {}".format(password))
-
         if password is not "":
 
             upn = "{}@{}".format(username, self.ldap_domain)
