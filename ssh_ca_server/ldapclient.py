@@ -83,10 +83,20 @@ class LdapClient(object):
 
         return False
 
+    def sanitizeLDAP(self, ldap_string):
+        return ldap_string.replace("\\","\\5c")\
+                          .replace("*","\\2a")\
+                          .replace("(","\\28")\
+                          .replace(")","\\29")\
+                          .replace("\0","\\00")
+
+
     def is_member(self, user_name, group_name):
         """ Determine if user_name is a member of ldap group """
 
         found = False
+        user_name = self.sanitizeLDAP(user_name)
+        group_name = self.sanitizeLDAP(group_name)
 
         # Using sAMAccountName get users full DN
         user_filter = "(&(objectClass=person)(sAMAccountName={}))".format(user_name)
