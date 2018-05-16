@@ -2,6 +2,7 @@
 
 Simple web service to provide SSH key signing.
 
+[![Build Status](https://travis-ci.org/commercehub-oss/ssh-ca-server.svg?branch=master)](https://travis-ci.org/commercehub-oss/ssh-ca-server)
 
 ## Purpose
 
@@ -70,20 +71,20 @@ While CA signing is a great feature there is an obvious need to protect the CA. 
     ```
     # Service account for running ssh-ca-server
     useradd ssh-ca-server
-     
+
     # Required configuration directory
     mkdir /etc/ssh-ca-server
     chown ssh-ca-server:ssh-ca-server /etc/ssh-ca-server
-     
+
     # Location to store all CA public and private keys
     mkdir /etc/ssh-ca-server/cas
     chown ssh-ca-server:ssh-ca-server /etc/ssh-ca-server/cas
     chmod 600 /etc/ssh-ca-server/cas
-     
+
     # Location for log file
     mkdir /var/log/ssh-ca-server
     chown ssh-ca-server:ssh-ca-server /var/log/ssh-ca-server
-    
+
     ```
 
 
@@ -116,22 +117,22 @@ While CA signing is a great feature there is an obvious need to protect the CA. 
         ]
     }
     ```
- 
+
 4. Install gunicorn
     ```
     apt-get install gunicorn
     ```
-    
+
 5. Create upstart script /etc/init/ssh-ca-server
     ```
     setuid ssh-ca-server
     setgid ssh-ca-server
-     
+
     start on runlevel [2345]
     stop on runlevel [06]
     respawn
     respawn limit 20 5
-      
+
     script
      gunicorn -w 4 ssh_ca_server:app -b 0.0.0.0
     end script
@@ -141,7 +142,7 @@ While CA signing is a great feature there is an obvious need to protect the CA. 
     ```
     service ssh-ca-server start
     ```
-   
+
 
 
 ## Server Configuration
@@ -189,9 +190,9 @@ All responses include the following attributes:
 It returns a JSON body like this:
 ```json
 {
-  "message": "", 
-  "version": "1.01", 
-  "payload": "", 
+  "message": "",
+  "version": "1.01",
+  "payload": "",
   "error": false
 }
 ```
@@ -205,17 +206,17 @@ It returns a json body like this:
 {
   "message": "",
   "version": "1.01",
-  "payload": 
+  "payload":
      [
         {
           "max_duration": "24h",
           "name": "production"
-        }, 
+        },
         {
           "max_duration": "30d",
           "name": "nonproduction"
-        } 
-      ], 
+        }
+      ],
   "error": false
 }
 ```
@@ -228,7 +229,7 @@ It returns a json body like this:
 {
   "message": "",
   "version": "1.01",
-  "payload": 
+  "payload":
     [
       {
         "allowed_principals": "admin",
@@ -282,7 +283,7 @@ The returned signed SSH certificate will include all authorized principals plus 
 The below examples shows the result of a successfully signed SSH certificate:
 
 ```
-$ ssh-keygen -L -f ~/.ssh/nonproduction_rsa-cert.pub 
+$ ssh-keygen -L -f ~/.ssh/nonproduction_rsa-cert.pub
 
 ~/.ssh/nonproduction_rsa-cert.pub:
         Type: ssh-rsa-cert-v01@openssh.com user certificate
@@ -291,15 +292,14 @@ $ ssh-keygen -L -f ~/.ssh/nonproduction_rsa-cert.pub
         Key ID: "username"
         Serial: 12515602213705584981
         Valid: from 2017-02-06T17:03:00 to 2017-03-08T17:04:44
-        Principals: 
+        Principals:
                 username
                 admin
         Critical Options: (none)
-        Extensions: 
+        Extensions:
                 permit-X11-forwarding
                 permit-agent-forwarding
                 permit-port-forwarding
                 permit-pty
                 permit-user-rc
 ```
-
