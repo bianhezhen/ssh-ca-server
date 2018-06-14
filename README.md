@@ -4,6 +4,8 @@ Simple web service to provide SSH key signing.
 
 [![Build Status](https://travis-ci.org/commercehub-oss/ssh-ca-server.svg?branch=master)](https://travis-ci.org/commercehub-oss/ssh-ca-server)
 
+> See [our security policy](SECURITY.md) for handling of security-related matters.
+
 ## Purpose
 
 The SSH CA Server provides a central service for authorizing SSH certificate signing requests. LDAP groups are used to determine a users authorization level. [ca-client](https://github.com/commercehub-oss/ssh-ca-client) can be deployed to workstations for interacting with the SSH CA Server.
